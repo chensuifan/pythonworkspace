@@ -1,16 +1,21 @@
-from os import error
+from ctypes.wintypes import BOOL
 import tkinter
+from tkinter.constants import TRUE
 import tkinter.ttk
 import serial
 import threading
 import time
 
+from serial.serialutil import Timeout
+
 
 '''
     調試好了：
         tcp調試好了用tk.place.froget()
+        串口連接調試好了，引入一個全局變量控制綫程的開關
     未能調試好的：
-        串口連接，關閉不了，未能開啓
+        調整tcpsocket 連接
+        
 '''
 
 
@@ -61,31 +66,49 @@ def showcnt():
         botebobox.place(x=120,y=220)
     else :
         print('打印錯誤')
-def serialcon():
-        ser = serial.Serial()
-        #初始化串口數據
-        ser.port = com.get() #獲取串口號
-        ser.baudrate = bote.get()   #設置波特率
-        ser.bytesize = 8
-        ser.parity = serial.PARITY_NONE
-        ser.stopbits = 1
-        over_time = 30
-        starttime=time.time()
-        def test():
-            while True:
-                end_time=time.time()
-                if end_time - starttime < over_time:
-                    ch = ser.read() # 只收一个bytes
-                    print(ch.decode(encoding='ascii'),end='')
-        thread=threading.Thread(target=test)
-        ser.open() # 开启串口
-        thread.start()
 
+
+
+ser = serial.Serial(timeout=0)
+#初始化串口數據
+ser.baudrate = bote.get()   #設置波特率
+ser.bytesize = 8
+ser.parity = serial.PARITY_NONE
+ser.stopbits = 1
+over_time = 30
+bool=True
+def serialcon():
+    global bool 
+    def test():
+        while bool:
+            end_time=time.time()
+            if end_time - starttime < over_time:
+                ch = ser.read() # 只收一个bytes
+                print(ch.decode(encoding='ascii'),end='') 
+    
+    if ser.is_open== False:
+        try:
+            ser.port = com.get() #獲取串口號
+            ser.open() # 开启串口
+            starttime=time.time()
+            thread=threading.Thread(target=test)
+            thread.start()
+        except:
+            ser.close()
+def serialclose():
+    global bool
+    try:
+        bool=False
+        ser.close()
+    except:
+        print('錯誤')
 def open():
+    global bool
     if whatcnt.get() ==1:
         pass
     elif whatcnt.get() ==2:
-        serialcon('open')
+        bool=True
+        serialcon()
     else:
         pass
 
@@ -95,7 +118,7 @@ def close():
             pass
     elif whatcnt.get() ==2:
 
-        serialcon() # 關閉串口
+        serialclose() # 關閉串口
         
     else:
         pass
