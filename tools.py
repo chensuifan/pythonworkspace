@@ -1,10 +1,11 @@
 import tkinter
-from tkinter.constants import END
+from tkinter.constants import BOTTOM, END
 import tkinter.ttk
 from typing import Text
 import serial
 import threading
 import time
+import mysocketclient
 
 
 
@@ -14,6 +15,8 @@ import time
         串口連接調試好了，引入一個全局變量控制綫程的開關
     未能調試好的：
         調整tcpsocket 連接
+        tcp鏈接不上，剛剛修改接收函數
+        
         
 '''
 
@@ -55,6 +58,8 @@ com=tkinter.StringVar()
 bote=tkinter.IntVar()
 bote.set('115200')
 closecon=tkinter.StringVar()
+tcp_mode=tkinter.StringVar()
+bool = True
 
 # 顯示網絡連接tcp ip 端口號
 def showcnt():
@@ -62,6 +67,8 @@ def showcnt():
         scdconnect.place_forget()
         connect.place(x=30,y=30)
         # 顯示tcp窗口
+        tkinter.Label(connect,text='協議類型:').place(x=20,y=70)
+        tcpcombobox=tkinter.ttk.Combobox(connect,textvariable=tcp_mode,width=10,values=('tcp server','tcp client','udp')).place(x=120,y=70)
         tkinter.Label(connect,text='IP地址:').place(x=20,y=120)
         tkinter.Label(connect,text='端口號:').place(x=20,y=220)
         tkinter.Entry(connect,textvariable=ip,width=12).place(x=120,y=120)
@@ -82,18 +89,17 @@ def showcnt():
 
 
 #打開串口，調用串口
-
 ser = serial.Serial()#初始化串口數據
 ser.baudrate = bote.get()   #設置波特率
 ser.bytesize = 8
 ser.parity = serial.PARITY_NONE
 ser.stopbits = 1
 over_time = 30
-bool=True
+
 
 # 讀取串口數據
 def serialcon():
-    global bool 
+    global bool
     def test():
         while bool:
             end_time=time.time()
@@ -115,6 +121,10 @@ def serialcon():
 
 #他開TCP，連接TCP
 
+mytcp=mysocketclient.mytcpclient()
+mytcp.open(ip.get(),port.get())
+
+
 
 
 # 關閉串口連接
@@ -122,27 +132,29 @@ def serialcon():
 def serialclose():
     global bool
     try:
-        bool=False
+        bool= False
         ser.close()
     except:
         print('錯誤')
 
 
-
 def open():
     global bool
     if whatcnt.get() ==1:
-        pass
+        tcprecv= mytcp.myrecv()
+        mytcp.start()
+        text1.insert(END,time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))+'\n',"tag_1")
+        text1.insert(END,tcprecv,"tag_2") 
+        text1.see(tkinter.END)
+        text1.update()
     elif whatcnt.get() ==2:
-        bool=True
+        bool = True
         serialcon()
-    else:
-        pass
 
 
 def close():
     if whatcnt.get() ==1:
-            pass
+        mytcp.close()
     elif whatcnt.get() ==2:
         serialclose() # 關閉串口
     else:
@@ -153,21 +165,26 @@ tcp=tkinter.Radiobutton(tk,text='網絡連接',variable=whatcnt,value=1,command=
 tcp.place(x=38,y=40)
 serial2=tkinter.Radiobutton(tk,text='串口連接',variable=whatcnt,value=2,command=showcnt,width=10,height=1)
 serial2.place(x=140,y=40)
+
 # 創建連接，斷開按鈕
 tkinter.Button(tk,text='連接設備',command=open,width=10,height=1).place(x=50,y=320)
 tkinter.Button(tk,text='斷開設備',command=close,width=10,height=1).place(x=160,y=320)
 
-def send():
+def serialsend():
     if whatcnt.get() ==1:
         pass
     elif whatcnt.get() ==2:
-        serialsenddata=text2.get(1.0,END)
-        # 如果需要處理發出去的數據請在這裏添加一個函數處理
-        ser.write(serialsenddata.encode('GBK'))
+        if ser.is_open== True:
+            serialsenddata=text2.get(1.0,END)
+            # 如果需要處理發出去的數據請在這裏添加一個函數處理
+            ser.write(serialsenddata.encode('GBK'))
+        else :
+            text1.insert(END,'串口沒有打開，請先打開串口！！！！',"tag_2")
     else:
-        pass
+        text1.insert(END,'連接沒有打開，請先連接設備！！！！',"tag_2")
+
 # 創建發送數據按鈕
-senddatabut=tkinter.Button(osframe,text='發送數據',command=send,width=10,height=1)
+senddatabut=tkinter.Button(osframe,text='發送數據',command=serialsend,width=10,height=1)
 senddatabut.place(x=758,y=405)
 
 
