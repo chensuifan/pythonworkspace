@@ -12,6 +12,7 @@ class mytcpclient():
         threading.Thread.__init__(self)
         try:
             self.sock.connect((host_ip, host_port))
+            self.sock.accept()
         except socket.error as e:
             return("Socket Connect Error:%s" % e)
             exit(1)
@@ -22,7 +23,7 @@ class mytcpclient():
     def close(self):
         self.sock.close()
 
-    def myrecv():
+    def myrecv(self):
         myrecv=self.sock.recv(1024).decode(encoding='gbk')
         return myrecv
     def start(self):

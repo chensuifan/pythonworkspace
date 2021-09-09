@@ -3,6 +3,12 @@ import time
 import socket
 import logging
 
+
+
+"""
+    還未調試完成，循環接受數據有問題，連接後不能關閉tcp 
+    
+"""
 logging.getLogger().setLevel(logging.INFO)
 logging.basicConfig(
                     format='%(asctime)s %(filename)s[line:%(lineno)d] %(levelname)s %(message)s',
