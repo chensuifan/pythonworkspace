@@ -141,8 +141,8 @@ def serialclose():
 def open():
     global bool
     if whatcnt.get() ==1:
-        tcprecv= mytcp.myrecv()
         mytcp.start()
+        tcprecv= mytcp.myrecv()
         text1.insert(END,time.strftime('%Y-%m-%d %H:%M:%S',time.localtime(time.time()))+'\n',"tag_1")
         text1.insert(END,tcprecv,"tag_2") 
         text1.see(tkinter.END)
